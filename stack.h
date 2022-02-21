@@ -52,7 +52,7 @@ do { \
   const size_t old_capacity = CAPACITY_STACK (S); \
   const size_t new_capacity = old_capacity ? 2*old_capacity : 1; \
   const size_t new_bytes = new_capacity * sizeof *(S).begin; \
-  (S).begin = realloc ((S).begin, new_bytes); \
+  (S).begin = CAST((S).begin, realloc ((S).begin, new_bytes));	\
   if (!(S).begin) \
     fatal_error ("out-of-memory reallocating '%zu' bytes", new_bytes); \
   (S).end = (S).begin + old_size; \

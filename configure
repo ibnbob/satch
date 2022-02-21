@@ -133,7 +133,8 @@ echo "$config" > .config
 
 ############################################################################
 
-CC=gcc
+#CC=gcc
+CC=g++
 
 CFLAGS="-W -Wall"
 [ $pedantic = yes ] && CFLAGS="$CFLAGS -Werror -std=c99 --pedantic"

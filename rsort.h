@@ -155,7 +155,7 @@ do { \
       if (!TMP_RANK) \
 	{ \
 	  assert (C_RANK == A_RANK); \
-	  TMP_RANK = malloc (BYTES_TMP_RANK); /*(1)*/ \
+	  TMP_RANK = CAST(TMP_RANK, malloc (BYTES_TMP_RANK)); /*(1)*/	\
 	  if (!TMP_RANK) \
 	    out_of_memory (BYTES_TMP_RANK); \
 	  B_RANK = TMP_RANK; \

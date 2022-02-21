@@ -216,7 +216,7 @@ struct clause
   // the opportunity to merge them all into a single (32-bit) word.
 
   bool garbage:1;		// Collect at next garbage collection.
-  bool protected:1;		// Do not collect current reason clauses.
+  bool preserved:1;		// Do not collect current reason clauses.
   bool redundant:1;		// Redundant / learned (not irredundant).
 #ifndef NSUBSUMPTION
   bool subsumed:1;		// Already used in subsumption.
@@ -263,6 +263,7 @@ struct clause
   unsigned *literals;
 #endif
 };
+
 
 /*------------------------------------------------------------------------*/
 
@@ -2191,7 +2192,7 @@ static struct clause *
 allocate_clause (size_t size)
 {
   const size_t bytes = bytes_clause (size);
-  struct clause *res = malloc (bytes);
+  struct clause *res = CAST(res, malloc (bytes));
   if (!res)
     out_of_memory (bytes);
   return res;
@@ -2263,7 +2264,7 @@ add_clause (struct satch *solver, bool redundant)
   res->id = added;
 #endif
   res->garbage = false;
-  res->protected = false;
+  res->preserved = false;
   res->redundant = redundant;
 #ifndef NUSED
   res->used = 0;
@@ -2630,7 +2631,7 @@ untag_clause (struct satch *solver,
 #define RESIZE_UNINITIALIZED(P) \
 do { \
   const size_t new_bytes = (size_t) new_capacity * sizeof *(P); \
-  (P) = realloc ((P), new_bytes); \
+  (P) = CAST(P, realloc ((P), new_bytes));			\
   if (!(P)) \
     out_of_memory (new_bytes); \
 } while (0)
@@ -2648,7 +2649,7 @@ do { \
   if (old_bytes) \
     memcpy (chunk, (P), old_bytes); \
   free ((P)); \
-  (P) = chunk; \
+  (P) = CAST(P, chunk);				\
 } while (0)
 
 /*------------------------------------------------------------------------*/
@@ -3965,7 +3966,7 @@ resize_trail (struct trail *trail, size_t new_capacity)
   const size_t size = SIZE_STACK (*trail);
   const size_t bytes = new_capacity * sizeof (unsigned);
   const unsigned propagate = trail->propagate - trail->begin;
-  trail->begin = realloc (trail->begin, bytes);
+  trail->begin = CAST(trail->begin, realloc (trail->begin, bytes));
   if (!trail->begin)
     out_of_memory (bytes);
   trail->end = trail->begin + size;
@@ -7415,8 +7416,8 @@ set_protect_flag_of_reasons (struct satch *solver, bool protect)
 	continue;
 #endif
       LOGCLS (reason, "%sprotecting", protect ? "" : "un");
-      assert (reason->protected != protect);
-      reason->protected = protect;
+      assert (reason->preserved != protect);
+      reason->preserved = protect;
     }
 }
 
@@ -7436,7 +7437,7 @@ clause_satisfied (struct satch *solver, struct clause *c)
 #ifndef NVIRTUAL
   assert (!is_tagged_clause (c));
   assert (!is_temporary_binary (solver, c));
-  assert (!c->protected);
+  assert (!c->preserved);
 #endif
 
   const signed char *const values = solver->values;
@@ -7610,7 +7611,7 @@ gather_reduce_candidates (struct satch *solver, bool new_fixed,
       assert (c->redundant);
       if (c->garbage)
 	continue;
-      if (c->protected)
+      if (c->preserved)
 	continue;
       if (new_fixed)
 	{
@@ -7739,7 +7740,7 @@ delete_garbage_clauses (struct satch *solver, struct clauses *clauses,
       struct clause *const c = *p;
       if (c->garbage)
 	{
-	  assert (!c->protected);
+	  assert (!c->preserved);
 	  bytes += delete_clause (solver, c);
 	  count++;
 	}
@@ -7858,7 +7859,7 @@ mark_garbage_candidates (struct satch *solver, struct clauses *candidates)
   while (SIZE_STACK (*candidates) > keep)
     {
       struct clause *c = POP (*candidates);
-      assert (!c->protected);
+      assert (!c->preserved);
       mark_garbage (solver, c, "reducing");
       reduced++;
     }
@@ -11324,7 +11325,7 @@ vivify_round (struct satch *solver, unsigned round, uint64_t delta,
       redundant = tier2 = false;
     }
 
-  unsigned *counts = calloc (LITERALS, sizeof (unsigned));
+  unsigned *counts = CAST(counts, calloc (LITERALS, sizeof (unsigned)));
 
   if (!counts)
     fatal_error ("could not allocate counts for vivification");
@@ -11819,7 +11820,7 @@ do { \
 static struct satch *
 internal_init (void)
 {
-  struct satch *solver = calloc (1, sizeof (struct satch));
+  struct satch *solver = CAST(solver, calloc (1, sizeof (struct satch)));
   if (!solver)
     fatal_error ("could not allocate solver");
 #ifdef NFOCUSED

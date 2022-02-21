@@ -909,7 +909,7 @@ has_suffix (const char *str, const char *suffix)
 static void
 open_pipe (const char *fmt)
 {
-  char *cmd = malloc (strlen (fmt) + strlen (input.path));
+  char *cmd = CAST(cmd, malloc (strlen (fmt) + strlen (input.path)));
   if (!cmd)
     error ("out-of-memory allocating command buffer");
   sprintf (cmd, fmt, input.path);

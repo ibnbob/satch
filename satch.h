@@ -156,3 +156,9 @@ unsigned max_stamped_unassigned_variable_on_decision_queue (struct satch
 unsigned max_score_unassigned_variable_on_binary_heap (struct satch *solver);
 #endif
 #endif
+
+#ifdef __cplusplus
+#define CAST(L,R) reinterpret_cast<decltype(L)>(R);
+#else
+#define CAST(L,R) R;
+#endif
